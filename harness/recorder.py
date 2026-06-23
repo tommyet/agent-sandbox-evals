@@ -25,6 +25,9 @@ class RunRecorder:
         self.commands_path = self.run_dir / "commands.jsonl"
         self.step = 0
 
+        self.model_events_path = self.run_dir / "model_events.jsonl"
+        self.model_step = 0
+
     def log_command(self, result: CommandResult) -> None:
         self.step += 1
 
@@ -50,3 +53,15 @@ class RunRecorder:
 
         with score_path.open("w") as f:
             json.dump(score, f, indent=2)
+
+    def log_model_event(self, messages, response: str) -> None:
+        self.model_step += 1
+
+        record = {
+            "model_step": self.model_step,
+            "messages": messages,
+            "response": response,
+        }
+
+        with self.model_events_path.open("a") as f:
+            f.write(json.dumps(record) + "\n")
