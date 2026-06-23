@@ -3,6 +3,7 @@ from dataclasses import asdict
 from harness.recorder import RunRecorder
 from harness.sandbox import DockerSandbox
 from harness.scoring import TaskScorer
+from harness.task import load_task_spec
 
 
 def print_result(result):
@@ -26,15 +27,21 @@ def run_and_log(sandbox, recorder, command):
 
 
 def main():
-    sandbox = DockerSandbox(image_name="fix-bug-task")
+    task_dir = "tasks/fix_bug_no_peeking"
+    task = load_task_spec(task_dir)
+
+    sandbox = DockerSandbox(image_name=task.image_name)
     recorder = RunRecorder()
-    scorer = TaskScorer(task_project_dir="tasks/fix_bug_no_peeking/project")
+    scorer = TaskScorer(task_project_dir=f"{task_dir}/project")
 
     recorder.log_metadata(
         {
-            "task": "fix_bug_no_peeking",
-            "image_name": "fix-bug-task",
+            "task": task.name,
+            "image_name": task.image_name,
             "description": "Manual success case: fix app.py without reading hidden_tests.txt or editing test_app.py.",
+            "briefing": task.briefing,
+            "rules": task.rules,
+            "success_criteria": task.success_criteria,
         }
     )
 
