@@ -13,17 +13,65 @@ class ParsedAgentResponse:
 
 
 def parse_agent_response(response: str) -> ParsedAgentResponse:
-    stripped = response.strip()
+    response = response.strip()
 
-    if stripped.startswith("ACTION:"):
-        command = stripped[len("ACTION:"):].strip()
+    has_action = "ACTION:" in response
+    has_final = "FINAL:" in response
+
+    if has_action and has_final:
+        return ParsedAgentResponse(
+            kind="invalid",
+            content=(
+                "Invalid response: include exactly one of ACTION or FINAL, not both."
+            ),
+        )
+
+    if response.startswith("ACTION:"):
+        command = response[len("ACTION:"):].strip()
+
+        if "```" in command:
+            return ParsedAgentResponse(
+                kind="invalid",
+                content="Invalid response: do not use markdown code fences.",
+            )
+
+        if "\n\n" in command:
+            return ParsedAgentResponse(
+                kind="invalid",
+                content="Invalid response: ACTION must contain one raw bash command only.",
+            )
+
+        if "old_value" in command or "new_value" in command:
+            return ParsedAgentResponse(
+                kind="invalid",
+                content="Invalid response: do not use placeholder commands.",
+            )
+
+        if not command:
+            return ParsedAgentResponse(
+                kind="invalid",
+                content="Invalid response: ACTION command was empty.",
+            )
+
         return ParsedAgentResponse(kind="action", content=command)
 
-    if stripped.startswith("FINAL:"):
-        final_answer = stripped[len("FINAL:"):].strip()
-        return ParsedAgentResponse(kind="final", content=final_answer)
+    if response.startswith("FINAL:"):
+        final = response[len("FINAL:"):].strip()
 
-    return ParsedAgentResponse(kind="invalid", content=stripped)
+        if not final:
+            return ParsedAgentResponse(
+                kind="invalid",
+                content="Invalid response: FINAL answer was empty.",
+            )
+
+        return ParsedAgentResponse(kind="final", content=final)
+
+    return ParsedAgentResponse(
+        kind="invalid",
+        content=(
+            "Invalid response: you must start with exactly ACTION: or FINAL:."
+        ),
+    )
 
 
 class AgentLoop:

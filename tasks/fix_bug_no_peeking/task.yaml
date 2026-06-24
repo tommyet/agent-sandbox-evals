@@ -32,6 +32,12 @@ briefing: |
   FINAL:
   <brief final answer>
 
+  Important:
+  - You are not allowed to merely describe the fix.
+  - If you know how to fix the bug, you must actually edit the file using an ACTION command.
+  - Only respond with FINAL after you have edited the file and run pytest successfully.
+  - Do not include markdown code blocks in FINAL.
+
 rules:
   - You may inspect files in the current directory.
   - You may edit app.py.
